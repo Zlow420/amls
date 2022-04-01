@@ -1,6 +1,9 @@
 import pandas as pd
 import numpy as np
 from matplotlib import pyplot as plt
+from sklearn import model_selection as ms
+from sklearn.linear_model import LogisticRegression
+from sklearn.svm import SVC
 
 # Open CSV files for red and white whine, then merge them
 wine_data_white = pd.read_csv("winequality-white.csv", sep=";")
@@ -75,5 +78,68 @@ for c in columns:
     print("Mean: ", red_mean, "Std: ", red_std, "Median: ", red_median)
     print()
 
+    '''
+    # Scatter Plots to visualize correlation between features
+    for c2 in columns:
+        if c == c2:
+            continue
+        fig = plt.figure(figsize=(4,10))
+        ax1 = fig.add_subplot(211)
+        ax2 = fig.add_subplot(212, sharex=ax2)
+
+        ax1.scatter(wine_data_red[c], wine_data_red[c2], c="r")
+        ax1.set_title("Red Wine Data")
+        ax2.scatter(wine_data_white[c], wine_data_white[c2], c="b")
+        ax2.set_title("White Wine Data")
+        plt.title(c + "-" + c2)
+        plt.savefig("figures/[SCATTER] "+ c + "-" + c2)
+        plt.close
+    '''
+
+    # Correlation Matrix
+    corr_matrix_red = np.corrcoef(wine_data_red.T)
+    corr_matrix_white = np.corrcoef(wine_data_white.T)
+    fig = plt.figure(figsize=(4,10))
+    ax1 = fig.add_subplot(211)
+    ax2 = fig.add_subplot(212)
+
+    ax1.matshow(np.abs(corr_matrix_red))
+    ax2.matshow(np.abs(corr_matrix_white))
+    plt.title("Correlation Matrices")
+    plt.savefig("figures/[CORRELATION MATRIX]")
+    plt.close
 
 
+
+# Split up to 80% Train, 10% Test, 10% Validation data
+wine_data_merged_matrix = list(wine_data_merged)
+wine_data_merged = np.array(wine_data_merged, dtype=float)
+
+X = wine_data_merged.T[:-2].T
+Y = wine_data_merged.T[-2:].T
+
+X_train, X_test, Y_train, Y_test = ms.train_test_split(X, Y, test_size=0.2, random_state=1)
+X_test, X_validation, Y_test, Y_validation = ms.train_test_split(X_test, Y_test, test_size=0.5, random_state=1)
+
+Y_train_quality = Y_train.T[0].T
+Y_train_type = Y_train.T[1].T
+
+Y_test_quality = Y_test.T[0].T
+Y_test_type = Y_test.T[1].T
+
+Y_validation_quality = Y_validation.T[0].T
+Y_validation_type = Y_validation.T[1].T
+
+
+# Logistic Regression
+logReg = LogisticRegression(max_iter=10000)
+logReg.fit(X_train, Y_train_type)
+predictedTypes = logReg.predict(X_test)
+print("[LOGISTIC REGRESSION]")
+print(logReg.score(X_test, Y_test_type))
+
+# Support Vector Machines
+svm = SVC(decision_function_shape='ovo')
+svm.fit(X_train, Y_train_type)
+print("[SUPPORT VECTOR MACHINE]")
+print(svm.score(X_test, Y_test_type))
