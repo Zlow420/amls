@@ -3,7 +3,10 @@ import numpy as np
 from matplotlib import pyplot as plt
 from sklearn import model_selection as ms
 from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import IsolationForest
 from sklearn.svm import SVC
+from sklearn.preprocessing import MinMaxScaler
+from sklearn.preprocessing import StandardScaler
 
 # Open CSV files for red and white whine, then merge them
 wine_data_white = pd.read_csv("winequality-white.csv", sep=";")
@@ -131,6 +134,29 @@ Y_validation_quality = Y_validation.T[0].T
 Y_validation_type = Y_validation.T[1].T
 
 
+# outlier removal
+'''
+iso = IsolationForest(contamination=0.5)
+mask = iso.fit_predict(X_train)
+mask = mask != -1
+X_train, Y_train_type = X_train[mask, :], Y_train_type[mask]
+'''
+
+# normalization DOES NOT WORK WELL
+'''
+minmaxScaler = MinMaxScaler()
+norm = minmaxScaler.fit(X_train)
+X_train = norm.transform(X_train)
+'''
+
+# standardization
+'''
+standardScaler = StandardScaler()
+std = standardScaler.fit(X_train)
+X_train = std.transform(X_train)
+print(X_train)
+'''
+
 # Logistic Regression
 logReg = LogisticRegression(max_iter=10000)
 logReg.fit(X_train, Y_train_type)
@@ -143,3 +169,6 @@ svm = SVC(decision_function_shape='ovo')
 svm.fit(X_train, Y_train_type)
 print("[SUPPORT VECTOR MACHINE]")
 print(svm.score(X_test, Y_test_type))
+
+
+

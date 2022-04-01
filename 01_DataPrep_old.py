@@ -4,6 +4,7 @@ import numpy as np
 import scipy.stats
 from sklearn.svm import SVC
 from sklearn.linear_model import LogisticRegression
+from sklearn.preprocessing import MinMaxScaler
 
 
 
