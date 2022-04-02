@@ -7,6 +7,10 @@ from sklearn.ensemble import IsolationForest
 from sklearn.svm import SVC
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.preprocessing import StandardScaler
+from sklearn.neighbors import KNeighborsRegressor
+from sklearn.model_selection import GridSearchCV
+
+from sklearn.neural_network import MLPRegressor
 
 # Open CSV files for red and white whine, then merge them
 wine_data_white = pd.read_csv("winequality-white.csv", sep=";")
@@ -150,12 +154,14 @@ X_train = norm.transform(X_train)
 '''
 
 # standardization
+
 '''
 standardScaler = StandardScaler()
 std = standardScaler.fit(X_train)
 X_train = std.transform(X_train)
 print(X_train)
 '''
+
 
 # Logistic Regression
 logReg = LogisticRegression(max_iter=10000)
@@ -170,5 +176,34 @@ svm.fit(X_train, Y_train_type)
 print("[SUPPORT VECTOR MACHINE]")
 print(svm.score(X_test, Y_test_type))
 
+X_train = np.concatenate([X_train, Y_train_type.reshape(5197,1)], axis=1)
+X_test = np.concatenate([X_test, Y_test_type.reshape(650,1)], axis=1)
 
+
+parameters = [{'hidden_layer_sizes': [3, 5, 10, 100],
+                   'alpha': [0.01, 1, 10, 100],
+                   'activation': ['relu','logistic','tanh', 'identity']}]
+
+
+regressor = MLPRegressor(solver="lbfgs", max_iter=10000, activation="logistic", alpha=1, hidden_layer_sizes=100)
+#regressor = GridSearchCV(regressor, parameters, verbose=3)
+regressor.fit(X_train, Y_train_quality)
+#best_parameters = regressor.best_params_
+
+#print ('best parameters:', best_parameters)
+
+# best parameters: {'activation': 'logistic', 'alpha': 1, 'hidden_layer_sizes': 100}
+
+regressorResult = regressor.predict(X_test)
+regressorScore = np.mean(np.abs(regressorResult - Y_test_quality))
+
+print("Average Distance: " , regressorScore)
+
+
+print("[KNN REGRESSION]")
+kNNregressor = KNeighborsRegressor(n_neighbors=7, weights="distance")
+kNNregressor.fit(X_train, Y_train_quality)
+kNNresult = kNNregressor.predict(X_test)
+kNNscore = np.mean(np.abs(kNNresult - Y_test_quality))
+print("Average Distance: " , kNNscore)
 
