@@ -11,6 +11,7 @@ from sklearn.neighbors import KNeighborsRegressor
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.model_selection import GridSearchCV
 from sklearn.tree import DecisionTreeRegressor
+import random as rnd
 
 import sklearn.metrics as metrics
 
@@ -205,6 +206,11 @@ X_train = std.transform(X_train)
 X_test = std.transform(X_test)
 print(X_train)
 
+normalizer = MinMaxScaler()
+minmax = normalizer.fit(X_train)
+X_train = minmax.transform(X_train)
+X_test = minmax.transform(X_test)
+
 # creating artificial feature -> low/high quality of wine
 toConcatetate = [6, 4, 1]
 new_X_train_class = np.concatenate([X_train.T[5].reshape(len(X_train.T[5]),1), Y_train_type.reshape(len(Y_train_type),1)], axis=1)
@@ -316,6 +322,18 @@ kNNresult = kNNregressor.predict(new_X_test)
 kNNscore = np.mean(np.abs(kNNresult - Y_test_quality))
 print("Average Distance: " , kNNscore)
 
+parameters = [{'n_neighbors': [1, 5, 10, 20, 50, 100, 200],
+                   'weights': ["uniform", "distance"],
+                   }]
+
+kNNregressor = KNeighborsRegressor()
+kNNregressor = GridSearchCV(kNNregressor, parameters, verbose=3)
+kNNregressor.fit(new_X_train, Y_train_quality)
+best_parameters = kNNregressor.best_params_
+
+print ('best parameters:', best_parameters)
+
+
 print("[KNN REGRESSION] + rounding")
 for i in range(0, len(kNNresult)):
     kNNresult[i] = np.round(kNNresult[i])
@@ -332,13 +350,13 @@ plt.show()
 
 
 
-''''''
+'''
 parameters = [{'hidden_layer_sizes': [3, 5, 10, 100],
-                   'alpha': [0.01,0.03, 0.1, 0.3],
+                   'alpha': [0.01, 1, 10, 100],
                    'activation': ['relu','logistic','tanh', 'identity']}]
 
 
-regressor = MLPRegressor(hidden_layer_sizes=(30, 180, 300, 500, 300, 15),solver="adam", max_iter=10000, activation="relu", alpha=0.03)
+regressor = MLPRegressor(solver="lbfgs", max_iter=10000, activation="logistic", alpha=1, hidden_layer_sizes=100)
 #regressor = GridSearchCV(regressor, parameters, verbose=3)
 regressor.fit(X_train, Y_train_quality)
 #best_parameters = regressor.best_params_
@@ -348,10 +366,18 @@ regressor.fit(X_train, Y_train_quality)
 # best parameters: {'activation': 'logistic', 'alpha': 1, 'hidden_layer_sizes': 100}
 
 regressorResult = regressor.predict(X_test)
+for i in range(0, len(regressorResult)):
+    regressorResult[i] = np.round(regressorResult[i])
+plt.close("all")
+plt.matshow(metrics.confusion_matrix(Y_test_quality, regressorResult))
+plt.show()
+
+
+
 regressorScore = np.mean(np.abs(regressorResult - Y_test_quality))
 
 print("Average Distance: " , regressorScore)
 
 
 
-''''''
+'''
