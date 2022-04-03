@@ -8,6 +8,7 @@ from sklearn.svm import SVC
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.preprocessing import StandardScaler
 from sklearn.neighbors import KNeighborsRegressor
+from sklearn.neighbors import KNeighborsClassifier
 from sklearn.model_selection import GridSearchCV
 from sklearn.tree import DecisionTreeRegressor
 
@@ -132,9 +133,24 @@ X_test, X_validation, Y_test, Y_validation = ms.train_test_split(X_test, Y_test,
 Y_train_quality = Y_train.T[0].T
 Y_train_type = Y_train.T[1].T
 
+Y_train_quality_binary = []
+for i in range(0, len(Y_train_quality)):
+    if(Y_train_quality[i] <= 4):
+        Y_train_quality_binary.append(0)
+    else:
+        Y_train_quality_binary.append(1)
+
 
 Y_test_quality = Y_test.T[0].T
 Y_test_type = Y_test.T[1].T
+
+Y_test_quality_binary = []
+for i in range(0, len(Y_test_quality)):
+    if(Y_test_quality[i] <= 4):
+        Y_test_quality_binary.append(0)
+    else:
+        Y_test_quality_binary.append(1)
+
 
 
 
@@ -179,6 +195,8 @@ X_train = np.concatenate([X_train, Y_train_type.reshape(Y_train_type.shape[0],1)
 X_test = np.concatenate([X_test, Y_test_type.reshape(Y_test_type.shape[0],1)], axis=1)
 
 
+num_neighbors = 20
+
 # standardization
 
 standardScaler = StandardScaler()
@@ -187,12 +205,34 @@ X_train = std.transform(X_train)
 X_test = std.transform(X_test)
 print(X_train)
 
+# creating artificial feature -> low/high quality of wine
+toConcatetate = [6, 4, 1]
+new_X_train_class = np.concatenate([X_train.T[5].reshape(len(X_train.T[5]),1), Y_train_type.reshape(len(Y_train_type),1)], axis=1)
+new_X_test_class = np.concatenate([X_test.T[5].reshape(X_test.shape[0],1), Y_test_type.reshape(len(Y_test_type),1)], axis=1)
 
+for i in toConcatetate:
+    new_X_train_class = np.concatenate([X_train.T[i].reshape(len(X_train.T[i]),1), new_X_train_class], axis=1)
+    new_X_test_class = np.concatenate([X_test.T[i].reshape(len(X_test.T[i]),1), new_X_test_class], axis=1)
+
+print("[KNN Classification] determining high/low quality")
+kNNclassifier = KNeighborsClassifier(n_neighbors=num_neighbors, weights="distance")
+kNNclassifier.fit(new_X_train_class, Y_train_quality_binary)
+X_test_quality_binary = kNNclassifier.predict(new_X_test_class)
+kNNscore = kNNclassifier.score(new_X_test_class, Y_test_quality_binary)
+print("Score: " , kNNscore)
+
+Y_train_quality_binary = np.array(Y_train_quality_binary)
+X_test_quality_binary = np.array(X_test_quality_binary)
 
 #taking features one by one to increase accuracy
 #free sulfur oxide
 new_X_train = np.concatenate([X_train.T[5].reshape(len(X_train.T[5]),1), Y_train_type.reshape(len(Y_train_type),1)], axis=1)
 new_X_test = np.concatenate([X_test.T[5].reshape(X_test.shape[0],1), Y_test_type.reshape(len(Y_test_type),1)], axis=1)
+
+'''
+new_X_train = np.concatenate([Y_train_quality_binary.reshape(len(X_train.T[6]),1), new_X_train], axis=1)
+new_X_test = np.concatenate([X_test_quality_binary.reshape(len(X_test.T[6]),1), new_X_test], axis=1)
+'''
 
 def color(quality):
     if(quality == 3):
@@ -225,9 +265,8 @@ plt.show()
 '''
 
 
-
 print("[KNN REGRESSION] + free sulfur oxide + standardization")
-kNNregressor = KNeighborsRegressor(n_neighbors=7, weights="distance")
+kNNregressor = KNeighborsRegressor(n_neighbors=num_neighbors, weights="distance")
 kNNregressor.fit(new_X_train, Y_train_quality)
 kNNresult = kNNregressor.predict(new_X_test)
 kNNscore = np.mean(np.abs(kNNresult - Y_test_quality))
@@ -238,7 +277,7 @@ new_X_train = np.concatenate([X_train.T[6].reshape(len(X_train.T[6]),1), new_X_t
 new_X_test = np.concatenate([X_test.T[6].reshape(len(X_test.T[6]),1), new_X_test], axis=1)
 
 print("[KNN REGRESSION] + total sulfur oxide")
-kNNregressor = KNeighborsRegressor(n_neighbors=7, weights="distance")
+kNNregressor = KNeighborsRegressor(n_neighbors=num_neighbors, weights="distance")
 kNNregressor.fit(new_X_train, Y_train_quality)
 kNNresult = kNNregressor.predict(new_X_test)
 kNNscore = np.mean(np.abs(kNNresult - Y_test_quality))
@@ -249,7 +288,7 @@ new_X_train = np.concatenate([X_train.T[7].reshape(len(X_train.T[7]),1), new_X_t
 new_X_test = np.concatenate([X_test.T[7].reshape(len(X_test.T[7]),1), new_X_test], axis=1)
 
 print("[KNN REGRESSION] + volatile acidity")
-kNNregressor = KNeighborsRegressor(n_neighbors=7, weights="distance")
+kNNregressor = KNeighborsRegressor(n_neighbors=num_neighbors, weights="distance")
 kNNregressor.fit(new_X_train, Y_train_quality)
 kNNresult = kNNregressor.predict(new_X_test)
 kNNscore = np.mean(np.abs(kNNresult - Y_test_quality))
@@ -260,7 +299,7 @@ new_X_train = np.concatenate([X_train.T[0].reshape(len(X_train.T[0]),1), new_X_t
 new_X_test = np.concatenate([X_test.T[0].reshape(len(X_test.T[0]),1), new_X_test], axis=1)
 
 print("[KNN REGRESSION] + fixed acidity")
-kNNregressor = KNeighborsRegressor(n_neighbors=7, weights="distance")
+kNNregressor = KNeighborsRegressor(n_neighbors=num_neighbors, weights="distance")
 kNNregressor.fit(new_X_train, Y_train_quality)
 kNNresult = kNNregressor.predict(new_X_test)
 kNNscore = np.mean(np.abs(kNNresult - Y_test_quality))
@@ -271,7 +310,7 @@ new_X_train = np.concatenate([X_train.T[10].reshape(len(X_train.T[10]),1), new_X
 new_X_test = np.concatenate([X_test.T[10].reshape(len(X_test.T[10]),1), new_X_test], axis=1)
 
 print("[KNN REGRESSION] + fixed acidity")
-kNNregressor = KNeighborsRegressor(n_neighbors=7, weights="distance")
+kNNregressor = KNeighborsRegressor(n_neighbors=num_neighbors, weights="distance")
 kNNregressor.fit(new_X_train, Y_train_quality)
 kNNresult = kNNregressor.predict(new_X_test)
 kNNscore = np.mean(np.abs(kNNresult - Y_test_quality))
@@ -285,9 +324,12 @@ print("Average Distance: " , kNNscore)
 
 
 
+'''
 plt.close("all")
 plt.matshow(metrics.confusion_matrix(Y_test_quality, kNNresult, labels=[3,4,5,6,7,8,9]))
 plt.show()
+'''
+
 
 
 '''
