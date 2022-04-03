@@ -11,6 +11,7 @@ from sklearn.neighbors import KNeighborsRegressor
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.model_selection import GridSearchCV
 from sklearn.tree import DecisionTreeRegressor
+import random as rnd
 
 import sklearn.metrics as metrics
 
@@ -127,8 +128,10 @@ wine_data_merged = np.array(wine_data_merged, dtype=float)
 X = wine_data_merged.T[:-2].T
 Y = wine_data_merged.T[-2:].T
 
-X_train, X_test, Y_train, Y_test = ms.train_test_split(X, Y, test_size=0.2, random_state=1)
-X_test, X_validation, Y_test, Y_validation = ms.train_test_split(X_test, Y_test, test_size=0.5, random_state=1)
+randomState = rnd.randint(0, 900000)
+
+X_train, X_test, Y_train, Y_test = ms.train_test_split(X, Y, test_size=0.2, random_state=randomState)
+X_test, X_validation, Y_test, Y_validation = ms.train_test_split(X_test, Y_test, test_size=0.5, random_state=randomState)
 
 Y_train_quality = Y_train.T[0].T
 Y_train_type = Y_train.T[1].T
@@ -198,12 +201,16 @@ X_test = np.concatenate([X_test, Y_test_type.reshape(Y_test_type.shape[0],1)], a
 num_neighbors = 20
 
 # standardization
-
 standardScaler = StandardScaler()
 std = standardScaler.fit(X_train)
 X_train = std.transform(X_train)
 X_test = std.transform(X_test)
 print(X_train)
+
+normalizer = MinMaxScaler()
+minmax = normalizer.fit(X_train)
+X_train = minmax.transform(X_train)
+X_test = minmax.transform(X_test)
 
 # creating artificial feature -> low/high quality of wine
 toConcatetate = [6, 4, 1]
@@ -258,11 +265,11 @@ fig = plt.figure()
 ax = fig.add_subplot(projection='3d')
 
 
-'''
-for i in range(0, len(X_train.T[5])):
-    ax.scatter(X_train.T[5][i], X_train.T[10][i], X_train.T[1][i], color=color(Y_train_quality.T[i]))
-plt.show()
-'''
+
+#for i in range(0, len(X_train.T[5])):
+#    ax.scatter(X_train.T[5][i], X_train.T[10][i], X_train.T[1][i], color=color(Y_train_quality.T[i]))
+#plt.show()
+
 
 
 print("[KNN REGRESSION] + free sulfur oxide + standardization")
@@ -316,6 +323,18 @@ kNNresult = kNNregressor.predict(new_X_test)
 kNNscore = np.mean(np.abs(kNNresult - Y_test_quality))
 print("Average Distance: " , kNNscore)
 
+parameters = [{'n_neighbors': [1, 5, 10, 20, 50, 100, 200],
+                   'weights': ["uniform", "distance"],
+                   }]
+
+kNNregressor = KNeighborsRegressor()
+kNNregressor = GridSearchCV(kNNregressor, parameters, verbose=3)
+kNNregressor.fit(new_X_train, Y_train_quality)
+best_parameters = kNNregressor.best_params_
+
+print ('best parameters:', best_parameters)
+
+
 print("[KNN REGRESSION] + rounding")
 for i in range(0, len(kNNresult)):
     kNNresult[i] = np.round(kNNresult[i])
@@ -324,15 +343,13 @@ print("Average Distance: " , kNNscore)
 
 
 
-'''
 plt.close("all")
 plt.matshow(metrics.confusion_matrix(Y_test_quality, kNNresult, labels=[3,4,5,6,7,8,9]))
 plt.show()
-'''
 
 
 
-'''
+
 parameters = [{'hidden_layer_sizes': [3, 5, 10, 100],
                    'alpha': [0.01, 1, 10, 100],
                    'activation': ['relu','logistic','tanh', 'identity']}]
@@ -348,10 +365,17 @@ regressor.fit(X_train, Y_train_quality)
 # best parameters: {'activation': 'logistic', 'alpha': 1, 'hidden_layer_sizes': 100}
 
 regressorResult = regressor.predict(X_test)
+for i in range(0, len(regressorResult)):
+    regressorResult[i] = np.round(regressorResult[i])
+plt.close("all")
+plt.matshow(metrics.confusion_matrix(Y_test_quality, regressorResult))
+plt.show()
+
+
+
 regressorScore = np.mean(np.abs(regressorResult - Y_test_quality))
 
 print("Average Distance: " , regressorScore)
 
 
 
-'''
