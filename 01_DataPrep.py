@@ -332,13 +332,13 @@ plt.show()
 
 
 
-'''
+''''''
 parameters = [{'hidden_layer_sizes': [3, 5, 10, 100],
-                   'alpha': [0.01, 1, 10, 100],
+                   'alpha': [0.01,0.03, 0.1, 0.3],
                    'activation': ['relu','logistic','tanh', 'identity']}]
 
 
-regressor = MLPRegressor(solver="lbfgs", max_iter=10000, activation="logistic", alpha=1, hidden_layer_sizes=100)
+regressor = MLPRegressor(hidden_layer_sizes=(30, 180, 300, 500, 300, 15),solver="adam", max_iter=10000, activation="relu", alpha=0.03)
 #regressor = GridSearchCV(regressor, parameters, verbose=3)
 regressor.fit(X_train, Y_train_quality)
 #best_parameters = regressor.best_params_
@@ -354,4 +354,4 @@ print("Average Distance: " , regressorScore)
 
 
 
-'''
+''''''
