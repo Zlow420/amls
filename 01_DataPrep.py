@@ -9,6 +9,9 @@ from sklearn.preprocessing import MinMaxScaler
 from sklearn.preprocessing import StandardScaler
 from sklearn.neighbors import KNeighborsRegressor
 from sklearn.model_selection import GridSearchCV
+from sklearn.tree import DecisionTreeRegressor
+
+import sklearn.metrics as metrics
 
 from sklearn.neural_network import MLPRegressor
 
@@ -31,8 +34,8 @@ wine_data_white.info(verbose=True)
 columns = wine_data_merged.columns
 
 for c in columns:
-    # Bar plots with features over quality
     '''
+    # Bar plots with features over quality
     fig = plt.figure(figsize=(4,10))
     ax1 = fig.add_subplot(211)
     ax2 = fig.add_subplot(212)
@@ -50,7 +53,7 @@ for c in columns:
 
     plt.savefig("figures/[BARPLOT] "+c)
     plt.close()
-    '''
+    
 
     # Histograms for each feature
     fig = plt.figure(figsize=(4,10))
@@ -85,7 +88,6 @@ for c in columns:
     print("Mean: ", red_mean, "Std: ", red_std, "Median: ", red_median)
     print()
 
-    '''
     # Scatter Plots to visualize correlation between features
     for c2 in columns:
         if c == c2:
@@ -101,8 +103,7 @@ for c in columns:
         plt.title(c + "-" + c2)
         plt.savefig("figures/[SCATTER] "+ c + "-" + c2)
         plt.close
-    '''
-
+'''
     # Correlation Matrix
     corr_matrix_red = np.corrcoef(wine_data_red.T)
     corr_matrix_white = np.corrcoef(wine_data_white.T)
@@ -131,20 +132,25 @@ X_test, X_validation, Y_test, Y_validation = ms.train_test_split(X_test, Y_test,
 Y_train_quality = Y_train.T[0].T
 Y_train_type = Y_train.T[1].T
 
+
 Y_test_quality = Y_test.T[0].T
 Y_test_type = Y_test.T[1].T
+
+
 
 Y_validation_quality = Y_validation.T[0].T
 Y_validation_type = Y_validation.T[1].T
 
 
 # outlier removal
+
 '''
-iso = IsolationForest(contamination=0.5)
+iso = IsolationForest(contamination=0.0001)
 mask = iso.fit_predict(X_train)
 mask = mask != -1
-X_train, Y_train_type = X_train[mask, :], Y_train_type[mask]
+X_train, Y_train_type, Y_train_quality = X_train[mask, :], Y_train_type[mask], Y_train_quality[mask]
 '''
+
 
 # normalization DOES NOT WORK WELL
 '''
@@ -153,14 +159,6 @@ norm = minmaxScaler.fit(X_train)
 X_train = norm.transform(X_train)
 '''
 
-# standardization
-
-'''
-standardScaler = StandardScaler()
-std = standardScaler.fit(X_train)
-X_train = std.transform(X_train)
-print(X_train)
-'''
 
 
 # Logistic Regression
@@ -176,10 +174,123 @@ svm.fit(X_train, Y_train_type)
 print("[SUPPORT VECTOR MACHINE]")
 print(svm.score(X_test, Y_test_type))
 
-X_train = np.concatenate([X_train, Y_train_type.reshape(5197,1)], axis=1)
-X_test = np.concatenate([X_test, Y_test_type.reshape(650,1)], axis=1)
+# use wine type for quality prediction
+X_train = np.concatenate([X_train, Y_train_type.reshape(Y_train_type.shape[0],1)], axis=1)
+X_test = np.concatenate([X_test, Y_test_type.reshape(Y_test_type.shape[0],1)], axis=1)
 
 
+# standardization
+
+standardScaler = StandardScaler()
+std = standardScaler.fit(X_train)
+X_train = std.transform(X_train)
+X_test = std.transform(X_test)
+print(X_train)
+
+
+
+#taking features one by one to increase accuracy
+#free sulfur oxide
+new_X_train = np.concatenate([X_train.T[5].reshape(len(X_train.T[5]),1), Y_train_type.reshape(len(Y_train_type),1)], axis=1)
+new_X_test = np.concatenate([X_test.T[5].reshape(X_test.shape[0],1), Y_test_type.reshape(len(Y_test_type),1)], axis=1)
+
+def color(quality):
+    if(quality == 3):
+        return "red"
+    elif(quality == 4):
+        return "green"
+    elif(quality == 5):
+        return "blue"
+    elif(quality == 6):
+        return "yellow"
+    elif(quality == 7):
+        return "pink"
+    elif(quality == 8):
+        return "purple"
+    elif(quality == 9):
+        return "black"
+    else: 
+        assert(False)
+
+
+plt.close("all")
+fig = plt.figure()
+ax = fig.add_subplot(projection='3d')
+
+
+'''
+for i in range(0, len(X_train.T[5])):
+    ax.scatter(X_train.T[5][i], X_train.T[10][i], X_train.T[1][i], color=color(Y_train_quality.T[i]))
+plt.show()
+'''
+
+
+
+print("[KNN REGRESSION] + free sulfur oxide + standardization")
+kNNregressor = KNeighborsRegressor(n_neighbors=7, weights="distance")
+kNNregressor.fit(new_X_train, Y_train_quality)
+kNNresult = kNNregressor.predict(new_X_test)
+kNNscore = np.mean(np.abs(kNNresult - Y_test_quality))
+print("Average Distance: " , kNNscore)
+
+#total sulfur oxide
+new_X_train = np.concatenate([X_train.T[6].reshape(len(X_train.T[6]),1), new_X_train], axis=1)
+new_X_test = np.concatenate([X_test.T[6].reshape(len(X_test.T[6]),1), new_X_test], axis=1)
+
+print("[KNN REGRESSION] + total sulfur oxide")
+kNNregressor = KNeighborsRegressor(n_neighbors=7, weights="distance")
+kNNregressor.fit(new_X_train, Y_train_quality)
+kNNresult = kNNregressor.predict(new_X_test)
+kNNscore = np.mean(np.abs(kNNresult - Y_test_quality))
+print("Average Distance: " , kNNscore)
+
+#volatile acidity 
+new_X_train = np.concatenate([X_train.T[7].reshape(len(X_train.T[7]),1), new_X_train], axis=1)
+new_X_test = np.concatenate([X_test.T[7].reshape(len(X_test.T[7]),1), new_X_test], axis=1)
+
+print("[KNN REGRESSION] + volatile acidity")
+kNNregressor = KNeighborsRegressor(n_neighbors=7, weights="distance")
+kNNregressor.fit(new_X_train, Y_train_quality)
+kNNresult = kNNregressor.predict(new_X_test)
+kNNscore = np.mean(np.abs(kNNresult - Y_test_quality))
+print("Average Distance: " , kNNscore)
+
+#fixed acidity 
+new_X_train = np.concatenate([X_train.T[0].reshape(len(X_train.T[0]),1), new_X_train], axis=1)
+new_X_test = np.concatenate([X_test.T[0].reshape(len(X_test.T[0]),1), new_X_test], axis=1)
+
+print("[KNN REGRESSION] + fixed acidity")
+kNNregressor = KNeighborsRegressor(n_neighbors=7, weights="distance")
+kNNregressor.fit(new_X_train, Y_train_quality)
+kNNresult = kNNregressor.predict(new_X_test)
+kNNscore = np.mean(np.abs(kNNresult - Y_test_quality))
+print("Average Distance: " , kNNscore)
+
+#alcohol 
+new_X_train = np.concatenate([X_train.T[10].reshape(len(X_train.T[10]),1), new_X_train], axis=1)
+new_X_test = np.concatenate([X_test.T[10].reshape(len(X_test.T[10]),1), new_X_test], axis=1)
+
+print("[KNN REGRESSION] + fixed acidity")
+kNNregressor = KNeighborsRegressor(n_neighbors=7, weights="distance")
+kNNregressor.fit(new_X_train, Y_train_quality)
+kNNresult = kNNregressor.predict(new_X_test)
+kNNscore = np.mean(np.abs(kNNresult - Y_test_quality))
+print("Average Distance: " , kNNscore)
+
+print("[KNN REGRESSION] + rounding")
+for i in range(0, len(kNNresult)):
+    kNNresult[i] = np.round(kNNresult[i])
+kNNscore = np.mean(np.abs(kNNresult - Y_test_quality))
+print("Average Distance: " , kNNscore)
+
+
+
+plt.close("all")
+plt.matshow(metrics.confusion_matrix(Y_test_quality, kNNresult, labels=[3,4,5,6,7,8,9]))
+plt.show()
+
+
+'''
 parameters = [{'hidden_layer_sizes': [3, 5, 10, 100],
                    'alpha': [0.01, 1, 10, 100],
                    'activation': ['relu','logistic','tanh', 'identity']}]
@@ -200,10 +311,5 @@ regressorScore = np.mean(np.abs(regressorResult - Y_test_quality))
 print("Average Distance: " , regressorScore)
 
 
-print("[KNN REGRESSION]")
-kNNregressor = KNeighborsRegressor(n_neighbors=7, weights="distance")
-kNNregressor.fit(X_train, Y_train_quality)
-kNNresult = kNNregressor.predict(X_test)
-kNNscore = np.mean(np.abs(kNNresult - Y_test_quality))
-print("Average Distance: " , kNNscore)
 
+'''
