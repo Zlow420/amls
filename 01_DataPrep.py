@@ -14,6 +14,7 @@ from sklearn.tree import DecisionTreeRegressor
 import random as rnd
 
 import sklearn.metrics as metrics
+import sklearn.utils
 
 from sklearn.neural_network import MLPRegressor
 
@@ -128,11 +129,19 @@ wine_data_merged = np.array(wine_data_merged, dtype=float)
 X = wine_data_merged.T[:-2].T
 Y = wine_data_merged.T[-2:].T
 
-X_train, X_test, Y_train, Y_test = ms.train_test_split(X, Y, test_size=0.2, random_state=1)
-X_test, X_validation, Y_test, Y_validation = ms.train_test_split(X_test, Y_test, test_size=0.5, random_state=1)
+randomState = rnd.randint(0, 900000)
 
-Y_train_quality = Y_train.T[0].T
-Y_train_type = Y_train.T[1].T
+X_train, X_test, Y_train, Y_test = ms.train_test_split(X, Y, test_size=0.2, random_state=randomState)
+X_test, X_validation, Y_test, Y_validation = ms.train_test_split(X_test, Y_test, test_size=0.5, random_state=randomState)
+
+
+Y_train_quality = Y_train[:,0]
+Y_train_type = Y_train[:,1]
+
+
+
+
+
 
 Y_train_quality_binary = []
 for i in range(0, len(Y_train_quality)):
@@ -142,8 +151,10 @@ for i in range(0, len(Y_train_quality)):
         Y_train_quality_binary.append(1)
 
 
-Y_test_quality = Y_test.T[0].T
-Y_test_type = Y_test.T[1].T
+Y_test_quality = Y_test[:,0]
+Y_test_type = Y_test[:,1]
+
+Y_train_quality = Y_train[:,0]
 
 Y_test_quality_binary = []
 for i in range(0, len(Y_test_quality)):
@@ -349,14 +360,39 @@ plt.show()
 '''
 
 
+quality_split = []
+for q in range(3, 10):
+    quality_split.append(X_train[Y_train_quality == q])
 
-'''
-parameters = [{'hidden_layer_sizes': [3, 5, 10, 100],
-                   'alpha': [0.01, 1, 10, 100],
-                   'activation': ['relu','logistic','tanh', 'identity']}]
+cut_size = 50
+
+splitcut = cut_size if len(quality_split[0]) > cut_size else len(quality_split[0])
+sampled_train_X = quality_split[0][:splitcut]
+sampled_train_Y = np.ones_like(sampled_train_X.T[0].T)*3
+
+for i in range(1,len(quality_split)):
+    splitcut = cut_size if len(quality_split[i]) > cut_size else len(quality_split[i])
+    sampled_train_X_ = quality_split[i][:splitcut]
+    sampled_train_Y_ = np.ones_like(sampled_train_X_.T[0].T) * (i+3)
+    sampled_train_X = np.concatenate([sampled_train_X,sampled_train_X_])
+    sampled_train_Y = np.concatenate([sampled_train_Y,sampled_train_Y_])
+
+#sampled_train_Y = sampled_train_Y.reshape((sampled_train_Y.shape[0],1))
 
 
-regressor = MLPRegressor(solver="lbfgs", max_iter=10000, activation="logistic", alpha=1, hidden_layer_sizes=100)
+
+
+X_train, Y_train_quality = sklearn.utils.shuffle(sampled_train_X, sampled_train_Y)
+
+
+''''''
+parameters = [{#'hidden_layer_sizes': [3, 5, 10, 100],
+                   'alpha': [0.01, 0.03, 0.1],
+                   'activation': ['relu','identity']}]
+                   #'activation': ['relu','logistic','tanh']}]
+
+
+regressor = MLPRegressor(solver="adam", max_iter=10000, activation="relu", alpha=0.01, hidden_layer_sizes=(24, 30, 24))
 #regressor = GridSearchCV(regressor, parameters, verbose=3)
 regressor.fit(X_train, Y_train_quality)
 #best_parameters = regressor.best_params_
@@ -365,14 +401,17 @@ regressor.fit(X_train, Y_train_quality)
 
 # best parameters: {'activation': 'logistic', 'alpha': 1, 'hidden_layer_sizes': 100}
 
-regressorResult = regressor.predict(X_test)
+regressorResult = regressor.predict(X_test[:,:])
 for i in range(0, len(regressorResult)):
     regressorResult[i] = np.round(regressorResult[i])
 plt.close("all")
 plt.matshow(metrics.confusion_matrix(Y_test_quality, regressorResult))
 plt.show()
 
+trainResult = regressor.predict(X_train)
+regressorScore = np.mean(np.abs(trainResult - Y_train_quality))
 
+print("Average Distance train: " , regressorScore)
 
 regressorScore = np.mean(np.abs(regressorResult - Y_test_quality))
 
@@ -380,4 +419,4 @@ print("Average Distance: " , regressorScore)
 
 
 
-'''
+''''''
