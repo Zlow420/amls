@@ -10,3 +10,5 @@ X_train, X_test, X_validation = data.normalize(X_train, X_test, X_validation)
 
 model.logReg(X_train, train_type, X_test, test_type)
 model.svclassifier(X_train, train_type, X_test, test_type)
+
+model.MLPreg(X_train, train_quality, X_test, test_quality)
