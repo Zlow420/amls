@@ -54,7 +54,7 @@ def logReg(X_train, Y_train, X_test, Y_test):
     predictedTypes = logReg.predict(X_test)
     print("[LOGISTIC REGRESSION]")
     print('test score: ',logReg.score(X_test, Y_test))
-    return logReg
+    return logReg.predict(X_test)
 
 # Support Vector Machines
 def svclassifier(X_train, Y_train, X_test, Y_test):
@@ -62,41 +62,7 @@ def svclassifier(X_train, Y_train, X_test, Y_test):
     svm.fit(X_train, Y_train)
     print("[SUPPORT VECTOR MACHINE]")
     print('test score: ',svm.score(X_test, Y_test))
-    return logReg
-
-# MLP regression
-def MLPreg(X_train, Y_train, X_test, Y_test):
-    parameters = [{  # 'hidden_layer_sizes': [3, 5, 10, 100],
-        'alpha': [0.01, 0.03, 0.1],
-        'activation': ['relu', 'identity']}]
-    # 'activation': ['relu','logistic','tanh']}]
-
-    regressor = MLPRegressor(solver="adam", max_iter=10000, activation="relu", alpha=0.01,
-                             hidden_layer_sizes=(24, 30, 24))
-    # regressor = GridSearchCV(regressor, parameters, verbose=3)
-    regressor.fit(X_train, Y_train)
-    # best_parameters = regressor.best_params_
-
-    # print ('best parameters:', best_parameters)
-
-    # best parameters: {'activation': 'logistic', 'alpha': 1, 'hidden_layer_sizes': 100}
-
-    regressorResult = regressor.predict(X_test)
-    for i in range(0, len(regressorResult)):
-        regressorResult[i] = np.round(regressorResult[i])
-    #plt.close("all")
-    #plt.matshow(metrics.confusion_matrix(Y_test, regressorResult))
-    #plt.show()
-
-    trainResult = regressor.predict(X_train)
-    regressorScore = np.mean(np.abs(trainResult - Y_train))
-
-    print("Average Distance train: ", regressorScore)
-
-    regressorScore = np.mean(np.abs(regressorResult - Y_test))
-
-    print("Average Distance: ", regressorScore)
-    return regressor
+    return svm.predict(X_test)
 
 
 class MLP(nn.Module):
@@ -106,7 +72,11 @@ class MLP(nn.Module):
   def __init__(self):
     super().__init__()
     self.layers = nn.Sequential(
-      nn.Linear(11, 64),
+      nn.Linear(12, 256),
+      nn.ReLU(),
+      nn.Linear(256, 128),
+      nn.ReLU(),
+      nn.Linear(128, 64),
       nn.ReLU(),
       nn.Linear(64, 32),
       nn.ReLU(),
@@ -123,19 +93,19 @@ class MLP(nn.Module):
 def MLPregression(X_train, Y_train, X_test, Y_test ):
     data_array = np.concatenate([X_train, Y_train], axis=1)
     data_array = torch.from_numpy(data_array)
-    trainloader = torch.utils.data.DataLoader(data_array, batch_size=10, shuffle=True, num_workers=1)
+    trainloader = torch.utils.data.DataLoader(data_array, batch_size=46, shuffle=True, num_workers=1)
     # Initialize the MLP
     mlp = MLP()
     
     # Define the loss function and optimizer
-    loss_function = nn.L1Loss()
+    loss_function = nn.MSELoss()
     optimizer = torch.optim.Adam(mlp.parameters(), lr=1e-4)
 
     # Run the training loop
     for epoch in range(0, 5): # 5 epochs at maximum
         
         # Print epoch
-        print(f'Starting epoch {epoch+1}')
+        #print(f'Starting epoch {epoch+1}')
         
         # Set current loss value
         current_loss = 0.0
@@ -165,10 +135,95 @@ def MLPregression(X_train, Y_train, X_test, Y_test ):
             
             # Print statistics
             current_loss += loss.item()
+            '''
             if i % 10 == 0:
                 print('Loss after mini-batch %5d: %.3f' %
-                        (i + 1, current_loss / 500))
+                        (i + 1, current_loss / 10))
                 current_loss = 0.0
+            '''
 
     # Process is complete.
-    print('Training process has finished.')
+    #print('Training process has finished.')
+    #mlp.eval()
+
+    X_test = torch.from_numpy(X_test)
+    X_test = X_test.float()
+    Y_test = torch.from_numpy(Y_test)
+    Y_test = Y_test.float()
+
+
+    y_pred = mlp(X_test)
+    y_pred_rounded = torch.round(y_pred)
+    
+    criterion = torch.nn.MSELoss()
+
+
+    y_pred_round = torch.round(y_pred)
+
+    mlpScore1 = torch.mean(torch.abs(y_pred - Y_test)).item()
+    mlpScore2 = torch.mean(torch.abs(y_pred_round - Y_test)).item()
+    print("[MLP REGRESSION MSE]")
+    print("test score: " , mlpScore1, " (not rounded)")
+    print("test score: " , mlpScore2, " (rounded)")
+    
+
+    return y_pred, y_pred_round
+
+def knnRegression(X_train, Y_train, X_test, Y_test):
+    print("[KNN REGRESSION]")
+    knnRegressor = KNeighborsRegressor(n_neighbors=20, weights="distance")
+    knnRegressor.fit(X_train, Y_train)
+    y_pred = knnRegressor.predict(X_test)
+    y_pred_round = np.round(y_pred)
+
+    kNNscore1 = np.mean(np.abs(y_pred - Y_test))
+    kNNscore2 = np.mean(np.abs(y_pred_round - Y_test))
+    print("test score: " , kNNscore1, " (not rounded)")
+    print("test score: " , kNNscore2, " (rounded)")
+    return y_pred, y_pred_round
+
+
+def basic_models(X_train, Y_train, X_test, Y_test, X_validation, Y_validation):
+
+
+    X_train, Y_train, X_test, Y_test, X_validation, Y_validation = removeOutliers(X_train, Y_train, X_test, Y_test, X_validation, Y_validation)
+
+    train_type, train_quality = Y_train[:,1], Y_train[:,0]
+    test_type, test_quality = Y_test[:,1], Y_test[:,0]
+    validation_type, validation_quality = Y_validation[:,1], Y_validation[:,0]
+
+    X_train_regression = np.concatenate([X_train, train_type.reshape(train_type.shape[0],1)], axis=1)
+    X_test_regression = np.concatenate([X_test, test_type.reshape(test_type.shape[0],1)], axis=1)
+
+    # MODEL
+    logReg(X_train, train_type, X_test, test_type)
+    svclassifier(X_train, train_type, X_test, test_type)
+    X_train_regression = np.concatenate([X_train, train_type.reshape(train_type.shape[0],1)], axis=1)
+    X_test_regression = np.concatenate([X_test, test_type.reshape(test_type.shape[0],1)], axis=1)
+
+    y_pred, y_pred_reg_mlp = MLPregression(X_train_regression, train_quality.reshape((train_quality.shape[0], 1)), X_test_regression, test_quality)
+    y_pred, y_pred_reg_knn = knnRegression(X_train_regression, train_quality, X_test_regression, test_quality)
+
+    # standardization
+    X_train, X_test, X_validation = scaler(X_train, X_test, X_validation)
+    logReg(X_train, train_type, X_test, test_type)
+    svclassifier(X_train, train_type, X_test, test_type)
+    X_train_regression = np.concatenate([X_train, train_type.reshape(train_type.shape[0],1)], axis=1)
+    X_test_regression = np.concatenate([X_test, test_type.reshape(test_type.shape[0],1)], axis=1)
+    y_pred = MLPregression(X_train_regression, train_quality.reshape((train_quality.shape[0], 1)), X_test_regression, test_quality)
+    y_pred = knnRegression(X_train_regression, train_quality, X_test_regression, test_quality)
+
+    # normalization
+    X_train, X_test, X_validation = normalize(X_train, X_test, X_validation)
+    y_pred_class_logreg = logReg(X_train, train_type, X_test, test_type)
+    y_pred_class_svm = svclassifier(X_train, train_type, X_test, test_type)
+    
+    X_train_regression = np.concatenate([X_train, train_type.reshape(train_type.shape[0],1)], axis=1)
+    X_test_regression = np.concatenate([X_test, test_type.reshape(test_type.shape[0],1)], axis=1)
+    
+    MLPregression(X_train_regression, train_quality.reshape((train_quality.shape[0], 1)), X_test_regression, test_quality)
+    knnRegression(X_train_regression, train_quality, X_test_regression, test_quality)
+
+    
+    return y_pred_class_logreg, y_pred_class_svm, y_pred_reg_mlp, y_pred_reg_knn
+

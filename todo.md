@@ -6,11 +6,11 @@
 - [X] split data into train and test + validation
 
 # Modeling
-- [ ] regression model
-- [ ] classification model
-- [ ] standardization
-- [ ] normalization
-- [ ] outlier removal
+- [X] regression model
+- [X] classification model
+- [X] standardization
+- [X] normalization
+- [X] outlier removal
 
 # Tuning
 - [ ] add non-linear features

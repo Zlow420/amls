@@ -38,5 +38,10 @@ In main.py the functions of all individual files are called.
 - trained logistic regression and support vector machine model
 - extended with outlier removal, standardization and normalization (in this order)
 -> test score increased after each modification
+-> used last version with standardization, normalization and removed outliers
 
 ## Regression Task
+- Multi Layer Perceptron in Pytorch
+- KNN Regressor 
+-> rounded predictions yield better results (mean of abs values for scoring)
+-> best result with original raw data
