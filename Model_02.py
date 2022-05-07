@@ -1,4 +1,9 @@
 import torch
+from torch import nn
+from torch.utils.data import DataLoader
+from sklearn.datasets import load_boston
+from sklearn.preprocessing import StandardScaler
+
 import numpy as np
 from matplotlib import pyplot as plt
 from sklearn import model_selection as ms
@@ -19,6 +24,28 @@ import sklearn.utils
 from sklearn.neural_network import MLPRegressor
 
 
+def scaler(train, test, valid):
+    standardScaler = StandardScaler()
+    std = standardScaler.fit(train)
+    trainscaled = std.transform(train)
+    testscaled = std.transform(test)
+    validscaled = std.transform(valid)
+    return trainscaled, testscaled, validscaled
+
+def normalize(train, test, valid):
+    normalizer = MinMaxScaler()
+    minmax = normalizer.fit(train)
+    trainnorm = minmax.transform(train)
+    testnorm = minmax.transform(test)
+    validnorm = minmax.transform(valid)
+    return trainnorm, testnorm, validnorm
+
+def removeOutliers(X_train, Y_train,  X_test, Y_test, X_validation, Y_validation):
+    iso = IsolationForest(contamination=0.1)
+    maskTrain = iso.fit_predict(X_train) != -1
+    maskTest = iso.predict(X_test) != -1
+    maskValid = iso.predict(X_validation) != -1
+    return X_train[maskTrain], Y_train[maskTrain], X_test[maskTest], Y_test[maskTest], X_validation[maskValid], Y_validation[maskValid]
 
 # Logistic Regression
 def logReg(X_train, Y_train, X_test, Y_test):
@@ -72,3 +99,76 @@ def MLPreg(X_train, Y_train, X_test, Y_test):
     return regressor
 
 
+class MLP(nn.Module):
+  '''
+    Multilayer Perceptron for regression.
+  '''
+  def __init__(self):
+    super().__init__()
+    self.layers = nn.Sequential(
+      nn.Linear(11, 64),
+      nn.ReLU(),
+      nn.Linear(64, 32),
+      nn.ReLU(),
+      nn.Linear(32, 1)
+    )
+
+
+  def forward(self, x):
+    '''
+      Forward pass
+    '''
+    return self.layers(x)
+
+def MLPregression(X_train, Y_train, X_test, Y_test ):
+    data_array = np.concatenate([X_train, Y_train], axis=1)
+    data_array = torch.from_numpy(data_array)
+    trainloader = torch.utils.data.DataLoader(data_array, batch_size=10, shuffle=True, num_workers=1)
+    # Initialize the MLP
+    mlp = MLP()
+    
+    # Define the loss function and optimizer
+    loss_function = nn.L1Loss()
+    optimizer = torch.optim.Adam(mlp.parameters(), lr=1e-4)
+
+    # Run the training loop
+    for epoch in range(0, 5): # 5 epochs at maximum
+        
+        # Print epoch
+        print(f'Starting epoch {epoch+1}')
+        
+        # Set current loss value
+        current_loss = 0.0
+        
+        # Iterate over the DataLoader for training data
+        for i, data in enumerate(trainloader, 0):
+        
+            # Get and prepare inputs
+            targets = torch.from_numpy(Y_train)
+            inputs = torch.from_numpy(X_train)
+            inputs, targets = inputs.float(), targets.float()
+            
+            # Zero the gradients
+            optimizer.zero_grad()
+            
+            # Perform forward pass
+            outputs = mlp(inputs)
+            
+            # Compute loss
+            loss = loss_function(outputs, targets)
+            
+            # Perform backward pass
+            loss.backward()
+            
+            # Perform optimization
+            optimizer.step()
+            
+            # Print statistics
+            current_loss += loss.item()
+            if i % 10 == 0:
+                print('Loss after mini-batch %5d: %.3f' %
+                        (i + 1, current_loss / 500))
+                current_loss = 0.0
+
+    # Process is complete.
+    print('Training process has finished.')
