@@ -13,6 +13,7 @@
 - [X] outlier removal
 
 # Tuning
+- [ ] add features one by one and evaluate
 - [ ] add non-linear features
 - [ ] remove correlated features
 - [ ] binning

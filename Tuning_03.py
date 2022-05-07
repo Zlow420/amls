@@ -11,9 +11,11 @@ def add_nonlin(dataset, index, nonlin):
     new_data = np.concatenate([dataset, nonlin_feat.reshape((nonlin_feat.shape[0], 1))], 1)
     return new_data
 
+#todo: try composite nonlinearities
 #def add_composite_nonlin(dataset, index, nonlin):
 
 
+#todo: test for removal of original feature
 def try_nonlins(X_train, Y_train, X_validation, Y_validation):
     train_type, train_quality = Y_train[:, 1], Y_train[:, 0]
     validation_type, validation_quality = Y_validation[:, 1], Y_validation[:, 0]
