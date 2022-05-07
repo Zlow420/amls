@@ -180,7 +180,7 @@ def knnRegression(X_train, Y_train, X_test, Y_test):
     kNNscore2 = np.mean(np.abs(y_pred_round - Y_test))
     print("test score: " , kNNscore1, " (not rounded)")
     print("test score: " , kNNscore2, " (rounded)")
-    return y_pred, y_pred_round
+    return y_pred, y_pred_round, kNNscore2
 
 
 def basic_models(X_train, Y_train, X_test, Y_test, X_validation, Y_validation):
@@ -202,7 +202,7 @@ def basic_models(X_train, Y_train, X_test, Y_test, X_validation, Y_validation):
     X_test_regression = np.concatenate([X_test, test_type.reshape(test_type.shape[0],1)], axis=1)
 
     y_pred, y_pred_reg_mlp = MLPregression(X_train_regression, train_quality.reshape((train_quality.shape[0], 1)), X_test_regression, test_quality)
-    y_pred, y_pred_reg_knn = knnRegression(X_train_regression, train_quality, X_test_regression, test_quality)
+    y_pred, y_pred_reg_knn,_ = knnRegression(X_train_regression, train_quality, X_test_regression, test_quality)
 
     # standardization
     X_train, X_test, X_validation = scaler(X_train, X_test, X_validation)
@@ -210,8 +210,8 @@ def basic_models(X_train, Y_train, X_test, Y_test, X_validation, Y_validation):
     svclassifier(X_train, train_type, X_test, test_type)
     X_train_regression = np.concatenate([X_train, train_type.reshape(train_type.shape[0],1)], axis=1)
     X_test_regression = np.concatenate([X_test, test_type.reshape(test_type.shape[0],1)], axis=1)
-    y_pred = MLPregression(X_train_regression, train_quality.reshape((train_quality.shape[0], 1)), X_test_regression, test_quality)
-    y_pred = knnRegression(X_train_regression, train_quality, X_test_regression, test_quality)
+    y_pred, _ = MLPregression(X_train_regression, train_quality.reshape((train_quality.shape[0], 1)), X_test_regression, test_quality)
+    y_pred, _ , _ = knnRegression(X_train_regression, train_quality, X_test_regression, test_quality)
 
     # normalization
     X_train, X_test, X_validation = normalize(X_train, X_test, X_validation)
