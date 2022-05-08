@@ -45,3 +45,21 @@ In main.py the functions of all individual files are called.
 - KNN Regressor 
 -> rounded predictions yield better results (mean of abs values for scoring)
 -> best result with original raw data
+
+
+# Tuning
+## Classification Task
+- already on 99% accuracy most of the time
+
+## Regression Task
+- iteratively adding the features that yield the best scores, also removes correlated/useless features
+- then choosing nonlinear functions that transform the features based on scores (validation dataset)
+- cross validation for hyper parameter tuning (both the kNN and MLP model)
+
+
+# Parallelization
+- run: "python main.py --parallel" for parallel execution, emit the flag for standard execution
+- improvements: from ~160 seconds to about 85 seconds (on my machine)
+- time measured with time.time() in python
+- parallelized the whole tuning process and with a parallel backend (multithreading)
+- additionally added more jobs to the cross validation

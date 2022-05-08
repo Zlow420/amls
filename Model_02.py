@@ -170,7 +170,7 @@ def MLPregression(X_train, Y_train, X_test, Y_test ):
     return y_pred, y_pred_round
 
 def knnRegression(X_train, Y_train, X_test, Y_test):
-    print("[KNN REGRESSION]")
+    #print("[KNN REGRESSION]")
     knnRegressor = KNeighborsRegressor(n_neighbors=20, weights="distance")
     knnRegressor.fit(X_train, Y_train)
     y_pred = knnRegressor.predict(X_test)
@@ -178,8 +178,9 @@ def knnRegression(X_train, Y_train, X_test, Y_test):
 
     kNNscore1 = np.mean(np.abs(y_pred - Y_test))
     kNNscore2 = np.mean(np.abs(y_pred_round - Y_test))
-    print("test score: " , kNNscore1, " (not rounded)")
-    print("test score: " , kNNscore2, " (rounded)")
+
+    #print("test score: " , kNNscore1, " (not rounded)")
+    #print("test score: " , kNNscore2, " (rounded)")
     return y_pred, y_pred_round, kNNscore2
 
 

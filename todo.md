@@ -13,16 +13,20 @@
 - [X] outlier removal
 
 # Tuning
-- [ ] add features one by one and evaluate
-- [ ] add non-linear features
-- [ ] remove correlated features
+- [X] add features one by one and evaluate
+- [X] add non-linear features
+- [X] remove correlated features
 - [ ] binning
 - [ ] tune hyper parameters
-- [ ] evaluate on validation set
+- [X] evaluate on validation set
 - [ ] cross validation
+- [ ] use pipeline in sklearn for gridsearchCV (include PCA, standardization, normalization etc.)
 
 # Debugging
 - [ ] debugging statistics
 - [ ] confusion matrix
 - [ ] analysis of prediction errors
 - [ ] automated explanation of prediction 
+
+# Parallelization
+-
