@@ -69,16 +69,15 @@ def add_features(X_train, Y_train, X_validation, Y_validation, numberOfFeatures)
             new_X_train[:,index] = X_train_regression[:,index]
             new_X_valid[:,index] = X_valid_regression[:,index]
 
-
         for i in range(X_train_regression.shape[1]):
             X_train_regression_feature = np.array(X_train_regression[:,i])
             X_valid_regression_feature = np.array(X_valid_regression[:,i])
 
             tmp_X_train = np.concatenate([new_X_train, X_train_regression_feature.reshape(X_train_regression.shape[0],1)], axis=1)
             tmp_X_valid = np.concatenate([new_X_valid, X_valid_regression_feature.reshape(X_valid_regression.shape[0],1)], axis=1)
-            _,_,nonlinscore = knnRegression(tmp_X_train, train_quality, tmp_X_valid, validation_quality)
+            _, _, nonlinscore = knnRegression(tmp_X_train, train_quality, tmp_X_valid, validation_quality)
 
-            
+
             if nonlinscore < current_best and i not in best_indices:
                print("NEW SCORE:", nonlinscore)
                current_best = nonlinscore
@@ -187,4 +186,3 @@ def perform_tuning(X_train, Y_train, X_validation, Y_validation, parallel=False)
 
     #return kNNresult, MLPresult, gs_knn, gs_mlp
     return kNNresult, MLPresult, gs_knn, mlpRegressor
-

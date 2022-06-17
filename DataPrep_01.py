@@ -2,22 +2,8 @@ import pandas as pd
 import numpy as np
 from matplotlib import pyplot as plt
 from sklearn import model_selection as ms
-from sklearn.linear_model import LogisticRegression
-from sklearn.ensemble import IsolationForest
-from sklearn.svm import SVC
-from sklearn.preprocessing import MinMaxScaler
-from sklearn.preprocessing import StandardScaler
-from sklearn.neighbors import KNeighborsRegressor
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.model_selection import GridSearchCV
-from sklearn.tree import DecisionTreeRegressor
 import random as rnd
 import seaborn as sns
-
-import sklearn.metrics as metrics
-import sklearn.utils
-
-from sklearn.neural_network import MLPRegressor
 
 # Open CSV files for red and white whine, then merge them
 def read_CSV():
@@ -95,26 +81,22 @@ def read_CSV():
     
         '''
     # Correlation Matrix
-    corr_matrix_red = np.corrcoef(wine_data_red.T)
-    corr_matrix_white = np.corrcoef(wine_data_white.T)
+    corr_matrix_red = np.corrcoef(wine_data_red.drop(['type'], axis=1).T)
+    corr_matrix_white = np.corrcoef(wine_data_white.drop(['type'], axis=1).T)
 
-    fig = plt.figure(figsize=(10,10))
-    sns.heatmap(np.abs(corr_matrix_red), annot=True)
+    plt.figure(figsize=(10,10))
+    sns.heatmap(np.abs(corr_matrix_red), annot=True, xticklabels=columns.drop(['type']), yticklabels=columns.drop(['type']))
     plt.title("Correlation Matrix")
     plt.savefig("figures/[CORRELATION MATRIX RED]")
-    plt.close
+    plt.close()
 
-    plt.figure()
-    fig = plt.figure(figsize=(10,10))
-    sns.heatmap(np.abs(corr_matrix_white), annot=True)
+    plt.figure(figsize=(10,10))
+    sns.heatmap(np.abs(corr_matrix_white), annot=True, xticklabels=columns.drop(['type']), yticklabels=columns.drop(['type']))
     plt.title("Correlation Matrix")
     plt.savefig("figures/[CORRELATION MATRIX WHITE]")
-    plt.close
-
-
+    plt.close()
 
     # Split up to 80% Train, 10% Test, 10% Validation data
-    wine_data_merged_matrix = list(wine_data_merged)
     wine_data_merged = np.array(wine_data_merged, dtype=float)
 
     X = wine_data_merged.T[:-2].T
@@ -124,7 +106,6 @@ def read_CSV():
 
     X_train, X_test, Y_train, Y_test = ms.train_test_split(X, Y, test_size=0.2, random_state=randomState)
     X_test, X_validation, Y_test, Y_validation = ms.train_test_split(X_test, Y_test, test_size=0.5, random_state=randomState)
-
 
     Y_train_quality = Y_train[:,0]
     Y_train_type = Y_train[:,1]

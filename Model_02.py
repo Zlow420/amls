@@ -5,7 +5,6 @@ from sklearn.datasets import load_boston
 from sklearn.preprocessing import StandardScaler
 
 import numpy as np
-from matplotlib import pyplot as plt
 from sklearn import model_selection as ms
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import IsolationForest
@@ -157,7 +156,6 @@ def MLPregression(X_train, Y_train, X_test, Y_test ):
     
     criterion = torch.nn.MSELoss()
 
-
     y_pred_round = torch.round(y_pred)
 
     mlpScore1 = torch.mean(torch.abs(y_pred - Y_test)).item()
@@ -186,7 +184,6 @@ def knnRegression(X_train, Y_train, X_test, Y_test):
 
 def basic_models(X_train, Y_train, X_test, Y_test, X_validation, Y_validation):
 
-
     X_train, Y_train, X_test, Y_test, X_validation, Y_validation = removeOutliers(X_train, Y_train, X_test, Y_test, X_validation, Y_validation)
 
     train_type, train_quality = Y_train[:,1], Y_train[:,0]
@@ -203,7 +200,7 @@ def basic_models(X_train, Y_train, X_test, Y_test, X_validation, Y_validation):
     X_test_regression = np.concatenate([X_test, test_type.reshape(test_type.shape[0],1)], axis=1)
 
     y_pred, y_pred_reg_mlp = MLPregression(X_train_regression, train_quality.reshape((train_quality.shape[0], 1)), X_test_regression, test_quality)
-    y_pred, y_pred_reg_knn,_ = knnRegression(X_train_regression, train_quality, X_test_regression, test_quality)
+    y_pred, y_pred_reg_knn, _ = knnRegression(X_train_regression, train_quality, X_test_regression, test_quality)
 
     # standardization
     X_train, X_test, X_validation = scaler(X_train, X_test, X_validation)
@@ -212,7 +209,7 @@ def basic_models(X_train, Y_train, X_test, Y_test, X_validation, Y_validation):
     X_train_regression = np.concatenate([X_train, train_type.reshape(train_type.shape[0],1)], axis=1)
     X_test_regression = np.concatenate([X_test, test_type.reshape(test_type.shape[0],1)], axis=1)
     y_pred, _ = MLPregression(X_train_regression, train_quality.reshape((train_quality.shape[0], 1)), X_test_regression, test_quality)
-    y_pred, _ , _ = knnRegression(X_train_regression, train_quality, X_test_regression, test_quality)
+    y_pred, _, _ = knnRegression(X_train_regression, train_quality, X_test_regression, test_quality)
 
     # normalization
     X_train, X_test, X_validation = normalize(X_train, X_test, X_validation)
@@ -225,6 +222,4 @@ def basic_models(X_train, Y_train, X_test, Y_test, X_validation, Y_validation):
     MLPregression(X_train_regression, train_quality.reshape((train_quality.shape[0], 1)), X_test_regression, test_quality)
     knnRegression(X_train_regression, train_quality, X_test_regression, test_quality)
 
-    
     return y_pred_class_logreg, y_pred_class_svm, y_pred_reg_mlp, y_pred_reg_knn
-
