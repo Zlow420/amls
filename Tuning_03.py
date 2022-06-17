@@ -44,9 +44,7 @@ def try_nonlins(X_train, Y_train, X_validation, Y_validation):
                 X_train_regression = new_X_train
                 X_valid_regression = new_X_valid
 
-
     return X_train_regression, X_valid_regression
-
 
 
 def add_features(X_train, Y_train, X_validation, Y_validation, numberOfFeatures):
@@ -77,7 +75,6 @@ def add_features(X_train, Y_train, X_validation, Y_validation, numberOfFeatures)
             tmp_X_valid = np.concatenate([new_X_valid, X_valid_regression_feature.reshape(X_valid_regression.shape[0],1)], axis=1)
             _, _, nonlinscore = knnRegression(tmp_X_train, train_quality, tmp_X_valid, validation_quality)
 
-
             if nonlinscore < current_best and i not in best_indices:
                print("NEW SCORE:", nonlinscore)
                current_best = nonlinscore
@@ -105,7 +102,6 @@ def perform_tuning(X_train, Y_train, X_validation, Y_validation, parallel=False)
     train_type, train_quality = Y_train[:,1], Y_train[:,0]
     validation_type, validation_quality = Y_validation[:,1], Y_validation[:,0]
 
-
     #discretizer = KBinsDiscretizer(n_bins=2, encode='ordinal', strategy='uniform')
     #discretizer.fit(new_X_train)    
 
@@ -127,7 +123,7 @@ def perform_tuning(X_train, Y_train, X_validation, Y_validation, parallel=False)
 
     gs_knn = GridSearchCV(pipe,
                       param_grid=params,
-                      verbose=3, cv=10, n_jobs = numberOfJobs)
+                      verbose=3, cv=10, n_jobs=numberOfJobs)
 
     gs_knn.fit(new_X_train, train_quality)
     kNNscore = np.mean(np.abs(gs_knn.predict(new_X_valid) - validation_quality))    
@@ -135,10 +131,8 @@ def perform_tuning(X_train, Y_train, X_validation, Y_validation, parallel=False)
     print("NEW KNN SCORE: " , kNNscore)
     print("best params:", gs_knn.best_params_)
 
-
     kNNresult = gs_knn.predict(new_X_valid)
     kNNresult = np.round(kNNresult)
-
 
     print("CROSS VALIDATION FOR MLP")
 
@@ -156,11 +150,9 @@ def perform_tuning(X_train, Y_train, X_validation, Y_validation, parallel=False)
     mlpRegressor = MLPRegressor(activation="relu", hidden_layer_sizes=(64,))
 
     '''
-
     mlpRegressor = MLPRegressor(activation="relu")
 
     pipe = Pipeline(steps=[("scaler", scaler), ("minmax", minmax), ("pca", pca), ("mlp", mlpRegressor)])
-
 
     gs_mlp = GridSearchCV(pipe,
                       param_grid=params,
@@ -169,10 +161,8 @@ def perform_tuning(X_train, Y_train, X_validation, Y_validation, parallel=False)
     gs_mlp.fit(new_X_train, train_quality)
     kNNscore = np.mean(np.abs(gs_mlp.predict(new_X_valid) - validation_quality))    
 
-
     print("NEW KNN SCORE: " , kNNscore)
     print("best params:", gs_mlp.best_params_)
-
 
     MLPresult = gs_knn.predict(new_X_valid)
     MLPresult = np.round(MLPresult)
@@ -182,7 +172,6 @@ def perform_tuning(X_train, Y_train, X_validation, Y_validation, parallel=False)
     MLPresult = mlpRegressor.predict(new_X_valid)
 
     MLPresult = np.round(MLPresult)
-
 
     #return kNNresult, MLPresult, gs_knn, gs_mlp
     return kNNresult, MLPresult, gs_knn, mlpRegressor

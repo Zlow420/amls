@@ -24,10 +24,12 @@ def debugging(y_pred_mlp, y_pred_knn, Y_validation):
     mae_mlp = [metrics.mean_absolute_error(validation_quality, y_pred_mlp), 'mae', 'mlp']
     mae_knn = [metrics.mean_absolute_error(validation_quality, y_pred_knn), 'mae', 'knn']
 
-    mlp_res = [r2_mlp[0], mse_mlp[0], rmse_mlp[0], mae_mlp[0]]
-    knn_res = [r2_knn[0], mse_knn[0], rmse_knn[0], mae_knn[0]]
-    #print("The best performing metric for mlp is: " + str(mlp_res[mlp_res.index(max(mlp_res))][1]) + " with the score " + str(max(mlp_res)))
-    #print("The best performing metric for knn is: " + str(knn_res[knn_res.index(max(knn_res))][1]) + " with the score " + str(max(knn_res)))
+    #mlp_res0 = [r2_mlp[0], mse_mlp[0], rmse_mlp[0], mae_mlp[0]]
+    #knn_res0 = [r2_knn[0], mse_knn[0], rmse_knn[0], mae_knn[0]]
+    #mlp_res1 = [r2_mlp[1], mse_mlp[1], rmse_mlp[1], mae_mlp[1]]
+    #knn_res1 = [r2_knn[1], mse_knn[1], rmse_knn[1], mae_knn[1]]
+    #print("The best performing metric for mlp is: " + str(mlp_res1[mlp_res0.index(max(mlp_res0))]) + " with the score " + str(max(mlp_res0)))
+    #print("The best performing metric for knn is: " + str(knn_res1[knn_res0.index(max(knn_res0))]) + " with the score " + str(max(knn_res0)))
 
     metrics_df = pd.DataFrame([r2_mlp, r2_knn, mse_mlp, mse_knn, rmse_mlp, rmse_knn, mae_mlp, mae_knn], columns=['score', 'type', 'model'])
 

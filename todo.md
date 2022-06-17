@@ -17,16 +17,16 @@
 - [X] add non-linear features
 - [X] remove correlated features
 - [ ] binning
-- [ ] tune hyper parameters
+- [x] tune hyper parameters
 - [X] evaluate on validation set
 - [ ] cross validation
 - [ ] use pipeline in sklearn for gridsearchCV (include PCA, standardization, normalization etc.)
 
 # Debugging
-- [ ] debugging statistics
-- [ ] confusion matrix
-- [ ] analysis of prediction errors
+- [x] debugging statistics
+- [x] confusion matrix
+- [x] analysis of prediction errors
 - [ ] automated explanation of prediction 
 
 # Parallelization
--
+- [x] run in parallel

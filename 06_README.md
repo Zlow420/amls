@@ -63,3 +63,8 @@ In main.py the functions of all individual files are called.
 - time measured with time.time() in python
 - parallelized the whole tuning process and with a parallel backend (multithreading)
 - additionally added more jobs to the cross validation
+
+# Debugging
+- Violin plot for visualizing quality of validation set and prediction models
+- Barplot of 4 different metrics 
+- Confusion matrix validation against predictions
