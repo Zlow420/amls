@@ -3,6 +3,7 @@ Metka Batic
 Kosmas Friessnig
 
 
+# How to Run:
 In main.py the functions of all individual files are called.
 
 #  Data Preparation
