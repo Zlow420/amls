@@ -1,3 +1,7 @@
+Metka Batic
+Kosmas Friessnig
+
+
 In main.py the functions of all individual files are called.
 
 #  Data Preparation
